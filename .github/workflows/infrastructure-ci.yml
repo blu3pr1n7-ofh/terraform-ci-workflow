@@ -1,0 +1,51 @@
+name: Infrastructure CI
+
+on:
+  push:
+    branches:
+      - $default-branch
+    paths:
+      - .github/workflows/infrastructure-ci.yml
+      - "./**"
+  pull_request:
+
+jobs:
+  terraform-fmt:
+    name: Format Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Format Terraform
+        uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: terraform_fmt --config "./hooks/pre-commit-config.yml"
+
+  terraform-validate:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Validate Terraform
+        uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: terraform_validate --config "./hooks/pre-commit-config.yml"
+
+  terraform-lint:
+    name: Lint Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup TF-Lint
+        uses: terraform-linters/setup-tflint@v1
+      - name: Lint Terraform
+        uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: terraform_tflint --config "./hooks/pre-commit-config.yml"
+      - name: Cache plugin dir
+        uses: actions/cache@v2
+        with:
+          path: ~/.tflint.d/plugins
+          key: tflint-${{ hashFiles('.tflint.hcl') }}
